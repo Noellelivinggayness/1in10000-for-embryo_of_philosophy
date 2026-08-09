@@ -18,6 +18,14 @@ Known issues:
 - sometimes the insta-death attack kills you in creative most often it does not (can't/won't fix)
 - sometimes embryo_of_philosophy won't kill you this is mostly due to the original mod but I could fix it by using another approach as I'm currently using /kill on behalf of the player to trigger embryo_of_philosophy (might fix if I get a reply from the original author)
 
+# Build instructions
+require a java jdk between 8 and 22
+```
+git clone https://github.com/Noellelivinggayness/1in10000-for-embryo_of_philosophy.git
+cd 1in10000-for-embryo_of_philosophy
+./gradlew build
+```
+
 
 SPDX-License-Identifier: GPL-2.0
 SPDX-License-Identifier: GPL-2.0-only
