@@ -1,0 +1,15 @@
+This project contains third-party build scripts:
+
+Gradle Wrapper (gradlew, gradlew.bat, gradle-wrapper.jar)
+Copyright (c) Gradle, Inc.
+Licensed under the Apache License, Version 2.0
+http://www.apache.org/licenses/LICENSE-2.0
+
+
+Third-Party References & Assets:
+
+"sras:grand_theatre", "sras:eop_body", and "sras:embryo_of_philosophy" are identifiers and references
+provided by the external project "Star Rail: Apocalyptic Shadow", available at:
+https://www.curseforge.com/minecraft/mc-mods/star-rail-apocalyptic-shadow/
+All rights reserved to LuoShu. These references are excluded from the GPL license
+governing this mod's source code and are used strictly for interoperability.

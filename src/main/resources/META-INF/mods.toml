@@ -1,0 +1,9 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="GPL-2.0-only"
+
+[[mods]]
+modId="one_in_10000_embryo_of_philosophy"
+version="1.0.0"
+displayName="1 in 10000 chance to summon embryo_of_philosophy"
+description="Adds a random chance to spawn embryo_of_philosophy in the world"
