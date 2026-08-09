@@ -1,4 +1,6 @@
 # one in 10000 chances every seconds to spawn embryo_of_philosophy
+PLEASE optimize my shit I beg of you pull requests would be awesome!
+
 Minecraft add-on mod for Star Rail: Apocalyptic Shadow
 
 Adds a random chance to spawn embryo_of_philosophy in the world
