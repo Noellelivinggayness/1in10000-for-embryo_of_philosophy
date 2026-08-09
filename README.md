@@ -25,6 +25,7 @@ git clone https://github.com/Noellelivinggayness/1in10000-for-embryo_of_philosop
 cd 1in10000-for-embryo_of_philosophy
 ./gradlew build
 ```
+use `gradlew.bat build` if you're on microslop
 
 
 SPDX-License-Identifier: GPL-2.0
