@@ -41,6 +41,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.PlayerChangedDimensionEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -51,6 +52,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -60,6 +62,7 @@ public class one_in_10000_embryo_of_philosophy {
     public static final String MOD_ID = "one_in_10000_embryo_of_philosophy";
 
     private static final Map<UUID, Integer> EMBRYO_KILL_COUNTS = new ConcurrentHashMap<>();
+    private static final Set<UUID> VERBOSE_PLAYERS = ConcurrentHashMap.newKeySet();
 
     private static boolean GRAND_THEATRE_RNG_PAUSED = false;
     private static UUID PENDING_GT_PLAYER_UUID = null;
@@ -93,7 +96,7 @@ public class one_in_10000_embryo_of_philosophy {
                             triggerSpawnLogic(level, player, "Grand Theatre Exit Trigger");
 
                             if (ModConfig.DEBUG.get()) {
-                                player.sendSystemMessage(Component.literal("§e[Debug] §aExecuted delayed Grand Theatre spawn after dimension transition"));
+                                player.sendSystemMessage(Component.literal("§e[Debug] §aTook you long enough"));
                             }
                         }
                         PENDING_GT_PLAYER_UUID = null;
@@ -108,9 +111,16 @@ public class one_in_10000_embryo_of_philosophy {
             if (tickCounter >= 20) {
                 tickCounter = 0;
 
-                if (!ModConfig.EMBRYO_OF_PHILOSOPHY.get()) return;
-
                 MinecraftServer server = event.getServer();
+                if (server != null) {
+                    for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                        if (VERBOSE_PLAYERS.contains(player.getUUID())) {
+                            player.sendSystemMessage(Component.literal("§e[Verbose] §a20 ticks passed did a check"));
+                        }
+                    }
+                }
+
+                if (!ModConfig.EMBRYO_OF_PHILOSOPHY.get()) return;
                 if (server == null) return;
 
                 for (ServerLevel level : server.getAllLevels()) {
@@ -125,23 +135,41 @@ public class one_in_10000_embryo_of_philosophy {
 
                     ServerPlayer selectedPlayer = playersInDim.get(level.getRandom().nextInt(playersInDim.size()));
 
-                    if (ModConfig.DEBUG.get()) {
-                        if (level.getRandom().nextInt(1000) == 0) {
-                            selectedPlayer.sendSystemMessage(Component.literal("§e[Debug] §cshitpost rng checked"));
-                        }
-                    }
-
                     if (level.getRandom().nextInt(10000) == 0) {
+                        if (ModConfig.DEBUG.get()) {
+                            selectedPlayer.sendSystemMessage(Component.literal("§e[Debug] §acheck passed [1/3] in " + dimName));
+                        }
+
                         if (dimName.equals("sras:grand_theatre")) {
                             GRAND_THEATRE_RNG_PAUSED = true;
                             PENDING_GT_PLAYER_UUID = selectedPlayer.getUUID();
 
                             if (ModConfig.DEBUG.get()) {
-                                selectedPlayer.sendSystemMessage(Component.literal("§e[Debug] §aSuccessful check but not now :3"));
+                                selectedPlayer.sendSystemMessage(Component.literal("§e[Debug] §ait's waiting for you <player> >:3 [1.b/3]"));
                             }
                         } else {
                             triggerSpawnLogic(level, selectedPlayer, "RNG");
                         }
+                    }
+                }
+            }
+        }
+
+        @SubscribeEvent
+        public static void onPlayerLoggedIn(PlayerLoggedInEvent event) {
+            if (event.getEntity() instanceof ServerPlayer joiningPlayer) {
+                if (ModConfig.DEBUG.get()) {
+                    MinecraftServer server = joiningPlayer.getServer();
+                    if (server != null) {
+                        StringBuilder sb = new StringBuilder("§e[Debug] §aPlayer joined. Selectable players list:\n");
+                        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                            sb.append("- ")
+                              .append(player.getScoreboardName())
+                              .append(" in ")
+                              .append(player.serverLevel().dimension().location().toString())
+                              .append("\n");
+                        }
+                        joiningPlayer.sendSystemMessage(Component.literal(sb.toString().trim()));
                     }
                 }
             }
@@ -193,6 +221,10 @@ public class one_in_10000_embryo_of_philosophy {
 
                     EMBRYO_KILL_COUNTS.put(embryoEntity.getUUID(), 0);
 
+                    if (ModConfig.DEBUG.get()) {
+                        player.sendSystemMessage(Component.literal("§e[Debug] §ait's here for " + player.getScoreboardName() + " >:3 [2/3] in " + level.dimension().location().toString()));
+                    }
+
                     CommandSourceStack commandSource = player.createCommandSourceStack()
                         .withPermission(4)
                         .withSuppressedOutput();
@@ -200,6 +232,10 @@ public class one_in_10000_embryo_of_philosophy {
                         commandSource,
                         "kill " + embryoEntity.getUUID().toString()
                     );
+
+                    if (ModConfig.DEBUG.get()) {
+                        player.sendSystemMessage(Component.literal("§e[Debug] §aangered it for you " + player.getScoreboardName() + " ;3 " + embryoEntity.getUUID().toString()));
+                    }
                 }
             }
         }
@@ -234,6 +270,28 @@ public class one_in_10000_embryo_of_philosophy {
 
             java.util.function.Predicate<CommandSourceStack> canExecute = source -> 
                 ModConfig.DEBUG.get() || source.hasPermission(2);
+
+            dispatcher.register(
+                Commands.literal("testtestverbose")
+                    .requires(canExecute)
+                    .executes(context -> {
+                        CommandSourceStack source = context.getSource();
+                        if (source.getEntity() instanceof ServerPlayer player) {
+                            UUID uuid = player.getUUID();
+                            if (VERBOSE_PLAYERS.contains(uuid)) {
+                                VERBOSE_PLAYERS.remove(uuid);
+                                source.sendSuccess(() -> Component.literal("§aVerbose mode disabled."), false);
+                            } else {
+                                VERBOSE_PLAYERS.add(uuid);
+                                source.sendSuccess(() -> Component.literal("§aVerbose mode enabled."), false);
+                            }
+                            return 1;
+                        } else {
+                            source.sendFailure(Component.literal("This command can only be executed by a player."));
+                            return 0;
+                        }
+                    })
+            );
 
             dispatcher.register(
                 Commands.literal("killtest")
@@ -279,19 +337,42 @@ public class one_in_10000_embryo_of_philosophy {
                     .requires(canExecute)
                     .executes(context -> {
                         CommandSourceStack source = context.getSource();
-                        ServerLevel level = source.getLevel();
-                        List<ServerPlayer> playersInDim = level.players();
+                        MinecraftServer server = source.getServer();
 
-                        if (playersInDim.isEmpty()) {
-                            source.sendFailure(Component.literal("No players present in this dimension."));
-                            return 0;
+                        if (server != null) {
+                            for (ServerLevel level : server.getAllLevels()) {
+                                List<ServerPlayer> playersInDim = level.players();
+                                if (playersInDim.isEmpty()) continue;
+
+                                String dimName = level.dimension().location().toString();
+
+                                if (dimName.equals("sras:grand_theatre") && GRAND_THEATRE_RNG_PAUSED) {
+                                    continue;
+                                }
+
+                                ServerPlayer selectedPlayer = playersInDim.get(level.getRandom().nextInt(playersInDim.size()));
+
+                                if (level.getRandom().nextInt(2) == 0) {
+                                    if (ModConfig.DEBUG.get()) {
+                                        selectedPlayer.sendSystemMessage(Component.literal("§e[Debug] §acheck passed [1/3] in " + dimName));
+                                    }
+
+                                    if (dimName.equals("sras:grand_theatre")) {
+                                        GRAND_THEATRE_RNG_PAUSED = true;
+                                        PENDING_GT_PLAYER_UUID = selectedPlayer.getUUID();
+
+                                        if (ModConfig.DEBUG.get()) {
+                                            selectedPlayer.sendSystemMessage(Component.literal("§e[Debug] §aSuccessful check but not now :3"));
+                                        }
+                                    } else {
+                                        triggerSpawnLogic(level, selectedPlayer, "Command: /testtestthing");
+                                    }
+                                }
+                            }
                         }
 
-                        ServerPlayer selectedPlayer = playersInDim.get(level.getRandom().nextInt(playersInDim.size()));
-                        triggerSpawnLogic(level, selectedPlayer, "Command: /testtestthing");
-
                         source.sendSuccess(
-                            () -> Component.literal("§aSuccessfully triggered Embryo of Philosophy spawn check for player " + selectedPlayer.getScoreboardName() + ":3"),
+                            () -> Component.literal("§aExecuted /testtestthing (1/2 coinflip check)."),
                             true
                         );
 
