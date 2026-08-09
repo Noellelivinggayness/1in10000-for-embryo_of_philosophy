@@ -12,8 +12,6 @@ the following commands are added when cheats and/or "Debug" are/is enabled:
 - testtestthing: use by itself summons embryo_of_philosophy in a specific way
 - killtest: use by itself kills embryo_of_philosophy (does not work on the real one)
 
-Report issues on Github
-
 Known issues:
 - sometimes the insta-death attack kills you in creative most often it does not (can't/won't fix)
 - sometimes embryo_of_philosophy won't kill you this is mostly due to the original mod but I could fix it by using another approach as I'm currently using /kill on behalf of the player to trigger embryo_of_philosophy (might fix if I get a reply from the original author)
